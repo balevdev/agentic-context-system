@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+vendor/
+__pycache__/
+.venv/
+venv/
+
+# Build outputs
+dist/
+build/
+*.egg-info/
+target/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+
+# Testing
+coverage/
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Add your project-specific ignores below
