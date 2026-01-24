@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "project": "todo-api",
+    "total_features": 5,
+    "completed_count": 0,
+    "next_priority": "SETUP-001",
+    "session_plan": {
+      "1": {
+        "name": "Foundation",
+        "features": ["SETUP-001", "SETUP-002"],
+        "token_budget": 50000
+      },
+      "2": {
+        "name": "Core API",
+        "features": ["CORE-001", "CORE-002"],
+        "token_budget": 80000
+      },
+      "3": {
+        "name": "Polish",
+        "features": ["CORE-003"],
+        "token_budget": 40000
+      }
+    }
+  },
+  "status_map": {
+    "SETUP-001": { "passes": false, "session": 1 },
+    "SETUP-002": { "passes": false, "session": 1 },
+    "CORE-001": { "passes": false, "session": 2 },
+    "CORE-002": { "passes": false, "session": 2 },
+    "CORE-003": { "passes": false, "session": 3 }
+  }
+}

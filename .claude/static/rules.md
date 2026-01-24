@@ -1,94 +1,127 @@
-# Rules Reference
+# Critical Operating Rules
 
-> Critical rules that govern autonomous AI operation.
-> These rules are NEVER to be violated.
-
----
-
-## CRITICAL RULES - NEVER VIOLATE
-
-1. **ONE TASK AT A TIME**
-   - Never work on more than one feature per session
-   - Complete the current task before starting another
-   - If blocked, mark as BLOCKED rather than switching tasks
-
-2. **COMMIT FREQUENTLY**
-   - Commit after every meaningful change
-   - Small, focused commits are better than large ones
-   - Never end a session with uncommitted changes
-
-3. **ALWAYS UPDATE PROGRESS**
-   - Update CURRENT_TASK.md as you work
-   - Append to progress.txt before ending session
-   - Document what was done and what comes next
-
-4. **NEVER BREAK EXISTING TESTS**
-   - Run tests before and after changes
-   - If tests fail, fix them before proceeding
-   - Never delete or skip tests to make them pass
-
-5. **LEAVE CODEBASE CLEAN**
-   - `git status` must show "nothing to commit" at session end
-   - All tests must pass
-   - No linting errors
+These rules must NEVER be violated. They exist to prevent common failure modes.
 
 ---
 
-## WORKFLOW RULES
+## 1. PHASE GATE RULE
 
-1. **READ BEFORE WRITING**
-   - Always read a file before modifying it
-   - Understand existing code before making changes
-   - Check for existing patterns to follow
+**Never move to Phase N+1 until Phase N passes tests and is committed.**
 
-2. **MAKE SMALL INCREMENTAL CHANGES**
-   - Prefer multiple small changes over one large change
-   - Test after each change
-   - Commit working states frequently
+```
+Phase N Complete
+    │
+    ▼
+Run: bun test && bun run lint
+    │
+    ├── PASS → Commit → Phase N+1
+    │
+    └── FAIL → Fix (counts as attempt) → Retry
+```
 
-3. **TEST IMMEDIATELY**
-   - Write tests for new functionality
-   - Run tests after every change
-   - Fix broken tests before moving on
-
-4. **DOCUMENT AS YOU GO**
-   - Update CURRENT_TASK.md with progress
-   - Add comments for non-obvious code
-   - Keep progress.txt up to date
+- Every phase completion requires a commit
+- Failed tests count as attempts toward the 3-attempt limit
+- Commit message format: `[FEATURE_ID] Phase N: Description`
 
 ---
 
-## STOP CONDITIONS
+## 2. ONE TASK AT A TIME
 
-**Mark task as BLOCKED if:**
+**Never work on more than one feature simultaneously.**
 
-- You need human input on design decisions
-- A dependency doesn't exist or isn't clear
-- Tests fail after 3 distinct fix attempts
-- Changes would affect more than 5 files unexpectedly
-- Requirements are ambiguous or contradictory
-- You discover a security concern
-
-**When blocked:**
-- Document what was attempted (minimum 3 approaches)
-- Explain what specifically is blocking progress
-- Describe what input is needed
-- Note any partial progress made
+- Complete the current task before starting another
+- If blocked, mark as BLOCKED rather than switching tasks
+- If you notice something else needs fixing, add it to backlog.json
 
 ---
 
-## COMPLETION CONDITIONS
+## 3. ATTEMPT TRACKING
 
-**A task is ONLY complete when ALL of these are true:**
+**Log every failure. Stop at 3 attempts.**
 
-- [ ] All acceptance criteria from feature_list.json are met
-- [ ] All tests pass (exit code 0)
-- [ ] Type checking passes (if applicable)
-- [ ] Linting passes (no errors)
-- [ ] Code is committed to git
-- [ ] CURRENT_TASK.md shows COMPLETED status
-- [ ] progress.txt has session summary
-- [ ] `git status` shows clean working tree
+On test/lint failure:
+1. Increment attempt counter (e.g., 1/3 → 2/3)
+2. Log in Attempt Log: `[YYYY-MM-DD HH:MM] - Error description`
+3. Try a different approach
+
+At 3/3:
+1. Set status to BLOCKED
+2. Document what was tried in "What Was Tried" section
+3. Add "What's Needed" section
+4. **STOP** - Do not continue
+
+---
+
+## 4. COMMIT FREQUENTLY
+
+**Small, focused commits after each phase.**
+
+- Each phase = one commit
+- Never end a session with uncommitted changes
+- Commit message format: `[FEATURE_ID] Phase N: Description`
+
+Example commits for CORE-001:
+```
+[CORE-001] Phase 1: Schema & Types
+[CORE-001] Phase 2: Validation with tests
+[CORE-001] Phase 3: Database operations with tests
+```
+
+---
+
+## 5. VERIFY BEFORE COMPLETING
+
+**No task is complete until ALL checks pass.**
+
+Before marking any phase complete:
+```bash
+bun test              # All tests pass
+bun run lint          # No lint errors
+bun run typecheck     # No type errors (if configured)
+git status            # Changes committed
+```
+
+---
+
+## 6. UPDATE TRACKING FILES
+
+**Files must reflect reality.**
+
+After each phase:
+- [ ] CURRENT_TASK.md phase table updated
+- [ ] Attempt counter reset to 0/3
+
+After task complete:
+- [ ] features/index.json status_map updated (`passes: true`)
+- [ ] CURRENT_TASK.md updated to next feature
+- [ ] progress.txt session summary appended
+
+---
+
+## 7. CONTEXT HANDOFF
+
+**Before spawning new agent or ending long session:**
+
+1. Create `.claude/handoff.md` from template
+2. Include: current phase, last commit, key files, test command
+3. New agent reads handoff.md first
+
+---
+
+## 8. WHEN STUCK, BLOCK
+
+**After 3 failed attempts, STOP immediately.**
+
+Do NOT:
+- Keep trying the same approach
+- Make risky changes without understanding
+- Move on to another task
+
+Do:
+- Mark BLOCKED in CURRENT_TASK.md
+- Document all attempts
+- Explain what's needed
+- Wait for human input
 
 ---
 
@@ -96,10 +129,9 @@
 
 **Commit Messages:**
 ```
-type(scope): short description
+[FEATURE_ID] Phase N: Description
 
-Types: feat, fix, docs, style, refactor, test, chore
-Example: feat(auth): add login validation
+Example: [CORE-001] Phase 2: Validation with tests
 ```
 
 **Branch Strategy:**
@@ -107,10 +139,6 @@ Example: feat(auth): add login validation
 - Use feature branches for established projects
 - Never force push
 - Never rebase published commits
-
-**Reverting:**
-- Use `git revert` to undo changes
-- Never use `git reset --hard` on shared history
 
 ---
 
@@ -125,24 +153,26 @@ Example: feat(auth): add login validation
 2. **Check recent changes**
    - `git log --oneline -5` - see recent commits
    - `git diff` - see uncommitted changes
-   - `git diff HEAD~1` - see last commit's changes
 
 3. **Three-attempt protocol**
    - Try 3 distinct approaches to fix
-   - Document each attempt
+   - Log each attempt in CURRENT_TASK.md
    - After 3 failures, mark as BLOCKED
-
-4. **When stuck after 3 attempts**
-   - Revert to last working state if needed
-   - Document the issue thoroughly
-   - Mark as BLOCKED with full context
 
 ---
 
-## REMEMBER
+## Summary Checklist
 
-- Quality over speed
-- Working code over complete code
-- Documented progress over silent progress
-- Small commits over large commits
-- Asking for help over making assumptions
+Before ending any session:
+
+```
+[ ] All tests pass (bun test)
+[ ] No lint errors (bun run lint)
+[ ] All changes committed
+[ ] CURRENT_TASK.md is accurate
+[ ] git status shows clean working tree
+```
+
+---
+
+*These rules exist because AI agents fail in predictable ways. Following them prevents wasted time and broken code.*

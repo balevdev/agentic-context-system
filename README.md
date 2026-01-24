@@ -1,6 +1,6 @@
-# Agentic Loop Starter
+# Agentic Context System
 
-A template for AI-assisted software development with persistent context across sessions.
+A template for AI-assisted software development with persistent context, phase gates, and attempt tracking.
 
 > **New here?** Start with the [Intro.md](./Intro.md) tutorial for a beginner-friendly walkthrough with examples.
 
@@ -17,21 +17,21 @@ For complex projects spanning multiple sessions, this creates repeated context-b
 
 ## The Solution
 
-The **Agentic Loop** externalizes context, rules, and progress into persistent files that the AI reads at session start and updates at session end.
+The **Agentic Context System** externalizes context, rules, and progress into persistent files that the AI reads at session start and updates at session end.
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    AGENTIC LOOP SYSTEM                       │
-├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│   Context Files          Task Management        Progress     │
-│   ─────────────          ───────────────        ────────     │
-│   • CLAUDE.md            • feature_list.json   • progress.txt│
-│   • rules.md             • CURRENT_TASK.md                   │
-│   • lessons-learned.md                                       │
-│   • checklists.md                                            │
-│                                                              │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                    AGENTIC CONTEXT SYSTEM                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│   Context Files          Feature Registry      Execution         │
+│   ─────────────          ────────────────      ─────────         │
+│   • CLAUDE.md            • features/index.json • Prompt.md       │
+│   • rules.md             • features/active/    • CURRENT_TASK.md │
+│   • lessons-learned.md   • features/backlog.json                 │
+│   • checklists.md                                                │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ## Quick Start
@@ -39,41 +39,48 @@ The **Agentic Loop** externalizes context, rules, and progress into persistent f
 ### 1. Copy this template
 
 ```bash
-cp -r agentic-loop-starter your-project-name
-cd your-project-name
+git clone https://github.com/balevdev/agentic-context-system.git todo-api
+cd todo-api
+rm -rf .git && git init
 ```
 
 ### 2. Initialize git
 
 ```bash
-git init
 git add .
-git commit -m "chore: initialize agentic loop template"
+git commit -m "chore: initialize agentic context system"
 ```
 
 ### 3. Customize for your project
 
 1. **Edit `CLAUDE.md`** - Add your project's technical specifications
-2. **Edit `feature_list.json`** - Define your project's phases and features
-3. **Edit `.claude/static/checklists.md`** - Add your test/lint commands
-4. **Start working** - The first task is already set up in `CURRENT_TASK.md`
+2. **Edit `features/index.json`** - Define your session plan
+3. **Create `features/active/FEATURE_ID.json`** - Add your first feature
+4. **Edit `.claude/static/checklists.md`** - Add your test/lint commands
+5. **Start working** - The first task is already set up in `CURRENT_TASK.md`
 
 ## File Structure
 
 ```
 your-project/
-├── CLAUDE.md                 # Technical specifications (project-specific)
-├── CURRENT_TASK.md           # Current task being worked on
-├── feature_list.json         # Master list of all features
-├── progress.txt              # Append-only session log
-├── README.md                 # This file
+├── CLAUDE.md                     # Project bible (tech specs, architecture)
+├── CURRENT_TASK.md               # Active task with phase tracking
+├── Prompt.md                     # Session execution protocol
+├── progress.txt                  # Append-only session log
+├── features/
+│   ├── index.json                # Lightweight status map + session plan
+│   ├── backlog.json              # Slim list (id, name, deps only)
+│   └── active/                   # Full definitions for active features
+│       └── SETUP-001.json
 └── .claude/
-    ├── lessons-learned.md    # Accumulated wisdom from sessions
-    ├── static/
-    │   ├── rules.md          # Critical operating rules
-    │   └── checklists.md     # Verification procedures
-    └── templates/
-        └── current-task.md   # Template for new tasks
+    ├── lessons-learned.md        # Accumulated wisdom from sessions
+    ├── commands/
+    │   └── work.md               # Planning mode with implementation hints
+    ├── templates/
+    │   └── HANDOFF.md            # Context spawn template
+    └── static/
+        ├── rules.md              # Critical operating rules
+        └── checklists.md         # Phase-specific verification
 ```
 
 ## File Purposes
@@ -83,119 +90,138 @@ your-project/
 | File | Purpose |
 |------|---------|
 | `CLAUDE.md` | Technical specifications, architecture, coding standards |
+| `Prompt.md` | Execution protocol: phase gates, attempt tracking, blocking |
 | `.claude/static/rules.md` | Critical rules that must never be violated |
-| `.claude/static/checklists.md` | Verification procedures for tasks and sessions |
 | `.claude/lessons-learned.md` | Patterns and wisdom from previous sessions |
 
-### Task Management (Updated during sessions)
+### Feature Registry (Status tracking)
 
 | File | Purpose |
 |------|---------|
-| `feature_list.json` | Registry of all features with acceptance criteria |
-| `CURRENT_TASK.md` | The active task with progress tracking |
+| `features/index.json` | Lightweight status map + session planning |
+| `features/backlog.json` | Slim list of all features (id, name, deps) |
+| `features/active/` | Full feature definitions for current work |
 
-### Progress Tracking (Append-only)
+### Execution Files (Updated during sessions)
 
 | File | Purpose |
 |------|---------|
-| `progress.txt` | Session-by-session audit trail |
+| `CURRENT_TASK.md` | Active task with phase table, attempts, blockers |
+| `.claude/templates/HANDOFF.md` | Context transfer template for new agents |
+| `progress.txt` | Append-only session audit trail |
+
+## Key Concepts
+
+### Phase Gates
+
+Every feature is broken into phases. You can't move to Phase N+1 until Phase N passes tests and is committed.
+
+```
+Phase N → Test → Pass → Commit → Phase N+1
+              ↓
+           Fail → Fix (counts as attempt) → Retry
+```
+
+### Attempt Tracking
+
+Each test failure increments an attempt counter. At 3 attempts, the task is marked BLOCKED.
+
+```
+Attempt 1/3 → Fail → Fix
+Attempt 2/3 → Fail → Fix
+Attempt 3/3 → Fail → BLOCKED → Wait for human
+```
+
+### Session Planning
+
+Features are grouped into sessions with token budgets:
+
+```json
+"session_plan": {
+  "1": {
+    "name": "Foundation",
+    "features": ["SETUP-001", "SETUP-002"],
+    "token_budget": 50000
+  }
+}
+```
 
 ## Session Workflow
 
 ### Starting a Session
 
-1. Read `CURRENT_TASK.md` to see the active task
-2. Read `.claude/static/rules.md` for operating constraints
-3. Read `.claude/lessons-learned.md` for project wisdom
-4. Read `CLAUDE.md` for technical context
+1. Read `CURRENT_TASK.md` to see the active task and phase
+2. Read `Prompt.md` for the execution protocol
+3. Read `.claude/static/rules.md` for operating constraints
+4. Read `.claude/lessons-learned.md` for project wisdom
+5. Read `CLAUDE.md` for technical context
 
-### During a Session
+### During a Session (for each phase)
 
-1. Work on ONE task at a time
-2. Make small, frequent commits
-3. Update `CURRENT_TASK.md` with progress
-4. Follow patterns from `CLAUDE.md`
+1. Build the phase deliverables
+2. Run tests: `bun test && bun run lint`
+3. If pass: Commit `[FEATURE_ID] Phase N: Description`
+4. If fail: Fix (increment attempt counter), retry
+5. At 3 failures: BLOCKED, stop
+6. Update CURRENT_TASK.md phase table
+7. Move to next phase
 
 ### Ending a Session
 
-1. Run the verification checklist from `.claude/static/checklists.md`
+1. Run verification: `bun test && bun run lint`
 2. Commit all changes
-3. Update `CURRENT_TASK.md` status
-4. If task complete, update `feature_list.json` (`passes: true`)
-5. Append session summary to `progress.txt`
+3. Update CURRENT_TASK.md status
+4. If task complete: update features/index.json (`passes: true`)
+5. Append session summary to progress.txt
 6. Verify `git status` shows clean working tree
 
-## Feature List Schema
+## Example: Bun + Hono Todo API
 
-```json
-{
-  "id": "PHASE-001",
-  "phase": "PHASE",
-  "name": "Feature Name",
-  "description": "What this feature does",
-  "dependencies": ["PREV-001"],
-  "acceptanceCriteria": [
-    "Criterion 1 that must be true",
-    "Criterion 2 that must be true"
-  ],
-  "passes": false
-}
+The template comes pre-configured with a Bun + Hono example project.
+
+**CLAUDE.md** defines a REST API:
+- Bun runtime with Hono framework
+- SQLite database (Bun's built-in)
+- TypeScript with strict mode
+
+**features/active/SETUP-001.json** defines the first task:
+- Initialize package.json
+- Configure TypeScript
+- Create basic Hono app with health check
+
+**Verification commands** (in checklists.md):
+```bash
+bun test              # Run tests
+bun run typecheck     # Type check
+bun run lint          # Lint
 ```
 
-**Rules:**
-- Only change `passes` from `false` to `true`
-- Never modify acceptance criteria
-- Complete dependencies before starting a feature
-
-## Key Principles
-
-### 1. One Task at a Time
-Never work on multiple features simultaneously. Complete or block the current task before moving to another.
-
-### 2. Commit Frequently
-Small, focused commits are better than large ones. Commit after every meaningful change.
-
-### 3. Verify Before Completing
-No task is complete until ALL acceptance criteria are met and ALL checks pass.
-
-### 4. Document Progress
-Update tracking files as you work. Future sessions depend on accurate documentation.
-
-### 5. When Stuck, Block
-If you can't proceed after 3 attempts, mark the task as BLOCKED with full context rather than making bad decisions.
-
-## Customization Guide
+## Customization
 
 ### For Different Tech Stacks
 
-Update `.claude/static/checklists.md` with your specific commands:
+Update `.claude/static/checklists.md` with your commands:
 
 **Node.js/TypeScript:**
 ```bash
-npm test
-npm run typecheck
-npm run lint
+npm test && npm run typecheck && npm run lint
 ```
 
 **Python:**
 ```bash
-pytest
-mypy .
-ruff check .
+pytest && mypy . && ruff check .
 ```
 
 **Go:**
 ```bash
-go test ./...
-go vet ./...
-golangci-lint run
+go test ./... && go vet ./... && golangci-lint run
 ```
 
 ### For Different Project Types
 
-- **Web App**: Add API endpoints to `CLAUDE.md`, component patterns, state management
-- **CLI Tool**: Add command structure, argument parsing patterns
-- **Library**: Add public API documentation, versioning strategy
+- **Web App**: Add API endpoints, component patterns, state management
+- **CLI Tool**: Add command structure, argument parsing
+- **Library**: Add public API docs, versioning strategy
 - **Microservice**: Add service boundaries, communication patterns
 
 ## Benefits
@@ -203,11 +229,11 @@ golangci-lint run
 | Benefit | How It's Achieved |
 |---------|-------------------|
 | **Session Independence** | Context loaded from files, not memory |
-| **Quality Consistency** | Checklists enforce standards |
-| **Progress Visibility** | Feature list and progress log track everything |
+| **Phase Accountability** | Commits after each phase prove progress |
+| **Safe Failure** | 3-attempt limit prevents spinning |
+| **Context Handoff** | HANDOFF.md preserves state for new agents |
 | **Knowledge Accumulation** | Lessons learned persist and grow |
-| **Safe Failure** | Blocked state prevents bad autonomous decisions |
-| **Audit Trail** | Append-only log documents all sessions |
+| **Audit Trail** | progress.txt documents all sessions |
 
 ## Inspiration
 

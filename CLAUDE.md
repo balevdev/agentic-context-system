@@ -13,18 +13,16 @@
 <!-- Describe your project here -->
 
 ```
-Project Name: [Your Project Name]
-Description: [What does this project do?]
-Tech Stack: [Languages, frameworks, tools]
+Project Name: todo-api
+Description: A REST API for managing tasks
+Tech Stack: Bun, Hono, SQLite (via Bun's built-in sqlite)
 ```
 
 ### Core Principles
 
-<!-- What principles guide development? -->
-
-1. **Principle 1**: Description
-2. **Principle 2**: Description
-3. **Principle 3**: Description
+1. **Type Safety**: TypeScript everywhere, no `any` types
+2. **Test First**: Write tests before implementation when possible
+3. **Simple APIs**: RESTful design, clear error messages
 
 ---
 
@@ -32,35 +30,81 @@ Tech Stack: [Languages, frameworks, tools]
 
 ### High-Level Structure
 
-<!-- Describe your project's architecture -->
-
 ```
-[Add an ASCII diagram or description of your architecture]
+┌─────────────────────────────────────────────────────────────────┐
+│                        TODO API                                  │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│   Client ──► Hono Routes ──► Handlers ──► Database              │
+│                   │              │                               │
+│                   ▼              ▼                               │
+│              Validation     Business Logic                       │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ### Directory Structure
 
 ```
-project/
-├── src/                    # Source code
-├── tests/                  # Test files
-├── docs/                   # Documentation
-└── ...                     # Other directories
+todo-api/
+├── src/
+│   ├── index.ts          # Entry point, Hono app setup
+│   ├── routes/
+│   │   └── todos.ts      # Todo CRUD routes
+│   ├── db/
+│   │   ├── index.ts      # Database connection
+│   │   └── schema.ts     # Table definitions
+│   ├── validators/
+│   │   └── todo.ts       # Input validation
+│   └── types/
+│       └── todo.ts       # TypeScript interfaces
+├── tests/
+│   ├── routes/
+│   │   └── todos.test.ts
+│   └── setup.ts          # Test utilities
+├── package.json
+├── tsconfig.json
+└── bunfig.toml
 ```
 
 ---
 
 ## TYPE SYSTEM
 
-<!-- If using TypeScript, define core types here -->
-
 ```typescript
-// Example types - replace with your own
+// Core domain types
 
-interface ExampleEntity {
-  id: string;
-  name: string;
-  createdAt: Date;
+interface Todo {
+  id: number;
+  title: string;
+  description: string | null;
+  completed: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface CreateTodoInput {
+  title: string;
+  description?: string;
+}
+
+interface UpdateTodoInput {
+  title?: string;
+  description?: string;
+  completed?: boolean;
+}
+
+// API response types
+
+interface ApiResponse<T> {
+  data: T;
+}
+
+interface ApiError {
+  error: {
+    code: string;
+    message: string;
+  };
 }
 ```
 
@@ -68,16 +112,33 @@ interface ExampleEntity {
 
 ## API DESIGN
 
-<!-- If building an API, document endpoints here -->
-
 ```
 Base URL: /api/v1
 
-GET    /resources          # List resources
-POST   /resources          # Create resource
-GET    /resources/:id      # Get resource
-PUT    /resources/:id      # Update resource
-DELETE /resources/:id      # Delete resource
+GET    /todos              # List all todos
+POST   /todos              # Create a todo
+GET    /todos/:id          # Get a single todo
+PATCH  /todos/:id          # Update a todo
+DELETE /todos/:id          # Delete a todo
+```
+
+### Response Format
+
+**Success:**
+```json
+{
+  "data": { ... }
+}
+```
+
+**Error:**
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Todo with id 123 not found"
+  }
+}
 ```
 
 ---
@@ -86,36 +147,32 @@ DELETE /resources/:id      # Delete resource
 
 ### Test Types
 
-- **Unit Tests**: Test individual functions/modules
-- **Integration Tests**: Test component interactions
-- **E2E Tests**: Test full user flows
+- **Unit Tests**: Validators, utility functions
+- **Integration Tests**: API routes with test database
 
 ### Running Tests
 
 ```bash
-# Replace with your actual commands
-npm test              # Run all tests
-npm run test:unit     # Run unit tests only
-npm run test:e2e      # Run E2E tests
+bun test              # Run all tests
+bun test --watch      # Watch mode
+bun test tests/routes # Run specific tests
 ```
 
 ---
 
 ## ERROR HANDLING
 
-<!-- Define how errors should be handled -->
-
 ```typescript
-// Example error pattern - customize for your project
+// Standard error codes
+const ErrorCodes = {
+  NOT_FOUND: "NOT_FOUND",
+  VALIDATION_ERROR: "VALIDATION_ERROR",
+  INTERNAL_ERROR: "INTERNAL_ERROR",
+} as const;
 
-class AppError extends Error {
-  constructor(
-    message: string,
-    public code: string,
-    public statusCode: number
-  ) {
-    super(message);
-  }
+// Error helper
+function apiError(c: Context, status: number, code: string, message: string) {
+  return c.json({ error: { code, message } }, status);
 }
 ```
 
@@ -125,25 +182,24 @@ class AppError extends Error {
 
 ### General Rules
 
-1. **Naming**: Use descriptive names (camelCase for variables, PascalCase for types)
+1. **Naming**: camelCase for variables/functions, PascalCase for types
 2. **Functions**: Keep functions small and focused
-3. **Comments**: Document "why" not "what"
-4. **Errors**: Always handle errors explicitly
+3. **Errors**: Always return proper error responses, never throw unhandled
+4. **Types**: Export types from dedicated files, import where needed
 
 ### File Organization
 
 ```typescript
 // Order of imports
-// 1. Built-in modules
-// 2. External packages
-// 3. Internal modules
-// 4. Relative imports
+// 1. External packages (hono, etc.)
+// 2. Internal modules (@/db, @/types, etc.)
+// 3. Relative imports
 
 // Order within file
 // 1. Types/interfaces
 // 2. Constants
 // 3. Helper functions
-// 4. Main exports
+// 4. Main exports (routes, handlers)
 ```
 
 ---
@@ -152,23 +208,29 @@ class AppError extends Error {
 
 ### Required Tools
 
-<!-- List tools needed to work on this project -->
-
-- Tool 1 (version)
-- Tool 2 (version)
+- Bun 1.0+
 
 ### Setup Commands
 
 ```bash
 # Clone and setup
 git clone [repo-url]
-cd [project-name]
+cd todo-api
 
 # Install dependencies
-[your install command]
+bun install
 
 # Run development server
-[your dev command]
+bun run dev
+
+# Run tests
+bun test
+
+# Type check
+bun run typecheck
+
+# Lint
+bun run lint
 ```
 
 ---
@@ -177,11 +239,11 @@ cd [project-name]
 
 When working on this project:
 
-1. **Check the types**: Domain types are the source of truth
-2. **Follow the patterns**: Consistency over cleverness
-3. **Test first**: Write tests before implementation when possible
-4. **Commit often**: Small, focused commits
-5. **Ask for help**: Update CURRENT_TASK.md with blockers
+1. **Check the types**: Domain types in `src/types/` are the source of truth
+2. **Follow the patterns**: Look at existing routes for examples
+3. **Test first**: Write the test, then the implementation
+4. **Validate input**: All POST/PATCH bodies go through validators
+5. **Handle errors**: Return proper ApiError responses
 
 ---
 

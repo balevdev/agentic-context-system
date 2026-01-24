@@ -1,161 +1,147 @@
 # Verification Checklists
 
-> Use these checklists to ensure consistent quality.
-> Never skip steps. Never mark complete until ALL checks pass.
+Use these checklists to verify quality at each stage.
 
 ---
 
-## FEATURE VERIFICATION CHECKLIST
+## Phase Completion Checklist
 
-Run this checklist before marking any feature as complete.
-
-### 1. ACCEPTANCE CRITERIA
-
-```
-[ ] Read each criterion from feature_list.json
-[ ] Manually verify EACH criterion is met
-[ ] Document verification in CURRENT_TASK.md
-[ ] No criterion is partially met - all or nothing
-```
-
-### 2. AUTOMATED TESTS
-
-```
-[ ] Unit tests exist for new code
-[ ] Tests cover happy path scenarios
-[ ] Tests cover error/edge cases
-[ ] All tests pass (exit code 0)
-[ ] No tests were deleted or skipped
-```
-
-### 3. CODE QUALITY
-
-```
-[ ] Linting passes (no errors)
-[ ] No debug code left (console.log, print, etc.)
-[ ] No commented-out code blocks
-[ ] Code follows project patterns
-[ ] No hardcoded values that should be config
-```
-
-### 4. TYPE SAFETY (if applicable)
-
-```
-[ ] Type checking passes
-[ ] No `any` types added
-[ ] All exports have explicit types
-[ ] No type assertions without justification
-```
-
-### 5. INTEGRATION
-
-```
-[ ] All imports resolve correctly
-[ ] No circular dependencies introduced
-[ ] Works with existing code
-[ ] No breaking changes to public APIs
-```
-
-### 6. DOCUMENTATION
-
-```
-[ ] Complex logic has comments
-[ ] Public functions have descriptions
-[ ] CURRENT_TASK.md updated with progress
-[ ] Any new patterns documented
-```
-
----
-
-## SESSION END CHECKLIST
-
-Run this checklist before ending ANY session.
-
-### Required Commands
-
-Run each command and verify the expected output:
+Before committing any phase:
 
 ```bash
 # 1. Run tests - must show all passing
-[YOUR_TEST_COMMAND]              # Exit code 0
+bun test                      # Exit code 0, all tests pass
 
-# 2. Type check (if applicable) - must pass
-[YOUR_TYPECHECK_COMMAND]         # Exit code 0
+# 2. Type check - must pass (if configured)
+bun run typecheck             # Exit code 0, no errors
 
 # 3. Lint check - must pass
-[YOUR_LINT_COMMAND]              # 0 errors
+bun run lint                  # Exit code 0, no errors
 
-# 4. Git status - must be clean
-git status                        # "nothing to commit, working tree clean"
-
-# 5. Recent commits - verify your work
-git log --oneline -3              # Shows your commits
-```
-
-### File Updates
-
-```
-[ ] CURRENT_TASK.md has accurate status
-    - If complete: status = COMPLETED, shows commit hash
-    - If in progress: status = IN_PROGRESS, shows progress
-    - If blocked: status = BLOCKED, shows blockers
-
-[ ] feature_list.json updated (if task complete)
-    - Set "passes": true for completed feature
-
-[ ] progress.txt has session summary
-    - Task ID and name
-    - What was completed
-    - Verification results
-    - What next session should do
-```
-
-### Final Verification
-
-```
-[ ] `git status` shows "nothing to commit"
-[ ] All tests passing
-[ ] No uncommitted changes anywhere
-[ ] Next session has clear starting point
+# 4. Verify the specific phase deliverables work
+# (depends on the phase - see below)
 ```
 
 ---
 
-## QUICK REFERENCE
+## Phase-Specific Checks
 
-**Before starting work:**
-1. Read CURRENT_TASK.md
-2. Read rules.md
-3. Read lessons-learned.md
-4. Understand acceptance criteria
+### Phase 1: Schema & Types
+- [ ] All interfaces defined in `src/types/`
+- [ ] Types are exported and importable
+- [ ] No `any` types
+- [ ] TypeScript compiles: `bun run typecheck`
 
-**During work:**
-1. Make small changes
-2. Test frequently
-3. Commit working states
-4. Update CURRENT_TASK.md
+### Phase 2: Validation
+- [ ] Validator functions exist in `src/validators/`
+- [ ] Validation tests exist and pass
+- [ ] Edge cases covered (empty, invalid, boundary)
+- [ ] Error messages are clear
 
-**Before ending session:**
-1. Run full test suite
-2. Commit all changes
-3. Update tracking files
-4. Verify clean git state
+### Phase 3: Core Logic / Database
+- [ ] CRUD operations implemented
+- [ ] Database operations have tests
+- [ ] Error handling for not-found cases
+- [ ] Tests use isolated test database
+
+### Phase 4: Routes
+- [ ] All endpoints respond correctly
+- [ ] Input validation wired up
+- [ ] Error responses follow ApiError format
+- [ ] Integration tests exist and pass
+
+### Phase 5: Integration
+- [ ] End-to-end flow works
+- [ ] Manual testing completed
+- [ ] Edge cases handled
+- [ ] Documentation updated (if needed)
 
 ---
 
-## COMMON MISTAKES TO AVOID
+## Session End Checklist
 
-1. **Marking complete without committing**
-   - Code must be committed before `passes: true`
+Before ending any session:
 
-2. **Skipping the test run**
-   - Always run full test suite at session end
+```bash
+# 1. Run all verification
+bun test                      # All pass
+bun run typecheck             # No errors (if configured)
+bun run lint                  # No errors
 
-3. **Leaving progress.txt empty**
-   - Every session needs a summary entry
+# 2. Check git status
+git status                    # "nothing to commit, working tree clean"
 
-4. **Forgetting to update CURRENT_TASK.md**
-   - Status must reflect reality
+# 3. Verify CURRENT_TASK.md is accurate
+# - Phase table shows correct status
+# - Attempt counter is accurate
+# - Blockers documented (if any)
+```
 
-5. **Starting new task before completing current**
-   - One task at a time, always
+---
+
+## Feature Completion Checklist
+
+Before marking a feature as `passes: true`:
+
+- [ ] ALL acceptance criteria met
+- [ ] ALL phases complete with commits
+- [ ] ALL tests passing
+- [ ] No lint/type errors
+- [ ] Code committed with proper message
+- [ ] features/index.json updated
+- [ ] CURRENT_TASK.md updated to next feature
+- [ ] Session summary appended to progress.txt
+
+---
+
+## Blocked Task Checklist
+
+When marking a task as BLOCKED:
+
+- [ ] 3 attempts logged with timestamps
+- [ ] Each attempt describes what was tried
+- [ ] "What Was Tried" section filled out
+- [ ] "What's Needed" section explains the blocker
+- [ ] Status set to BLOCKED in CURRENT_TASK.md
+- [ ] No further work attempted on this task
+
+---
+
+## New Session Checklist
+
+When starting a new session:
+
+1. [ ] Read CURRENT_TASK.md - understand current state
+2. [ ] Read features/index.json - check dependencies
+3. [ ] Read Prompt.md - follow the protocol
+4. [ ] Read CLAUDE.md - understand patterns
+5. [ ] Read .claude/lessons-learned.md - avoid past mistakes
+6. [ ] If handoff.md exists, read it first
+7. [ ] Run `bun test` - verify clean starting state
+
+---
+
+## Quick Reference Commands
+
+```bash
+# Development
+bun run dev               # Start dev server
+
+# Testing
+bun test                  # Run all tests
+bun test --watch          # Watch mode
+bun test tests/routes     # Specific tests
+
+# Quality
+bun run typecheck         # Type checking
+bun run lint              # Linting
+bun run lint --fix        # Auto-fix lint issues
+
+# Git
+git status                # Check working tree
+git log --oneline -5      # Recent commits
+```
+
+---
+
+*Run these checklists mechanically. Don't skip steps. Quality comes from consistency.*

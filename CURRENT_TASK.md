@@ -1,61 +1,60 @@
-# SETUP-001: Initialize Project
+# SETUP-001: Initialize Bun Project
 
-**Status:** NOT_STARTED | **Previous:** None (first task)
+**Status:** NOT_STARTED | **Session:** 1
 
----
+## Phase Progress
 
-## Overview
+| Phase | Name           | Status  | Commit |
+|-------|----------------|---------|--------|
+| 1     | Schema & Types | pending | -      |
+| 2     | Core Setup     | pending | -      |
+| 3     | Verification   | pending | -      |
 
-Set up the basic project structure. This is the first task when using this
-template for a new project. Customize the agentic loop files for your
-specific project.
+## Current Phase
 
----
+**Phase:** 1 - Schema & Types
+**Attempts:** 0/3
+
+### Attempt Log
+<!-- Add entries: [YYYY-MM-DD HH:MM] - Error description -->
 
 ## Acceptance Criteria
 
-- [ ] Update CLAUDE.md with your project's technical specifications
-- [ ] Update feature_list.json with your project's phases and features
-- [ ] Update .claude/static/checklists.md with your project's test commands
-- [ ] Initialize your project's package manager (npm, bun, pip, etc.)
-- [ ] Verify the agentic loop is working (commit this setup)
+- [ ] package.json exists with bun as runtime
+- [ ] Hono installed and configured
+- [ ] Basic health check endpoint works
+- [ ] bun run dev starts the server
+- [ ] TypeScript configured with strict mode
 
----
+## Dependencies
 
-## Progress
+- None (first task)
 
-<!-- Update this section as you work -->
+## Implementation Hints
 
-- (not started)
+### Files to Create
+- `package.json` - Project metadata and scripts
+- `tsconfig.json` - TypeScript configuration
+- `src/index.ts` - Hono app entry point
 
----
+### Pattern Reference
+```typescript
+import { Hono } from 'hono'
 
-## Files
+const app = new Hono()
 
-**To Modify:**
-- `CLAUDE.md` - Add your project specifications
-- `feature_list.json` - Define your project's features
-- `.claude/static/checklists.md` - Add your test/lint commands
+app.get('/health', (c) => c.json({ status: 'ok' }))
 
-**To Create:**
-- Your project's source files
-- Your project's configuration files
-
----
+export default app
+```
 
 ## Next
 
-After completing project setup, proceed to your first real feature as
-defined in feature_list.json.
+After completing SETUP-001, proceed to:
+- **SETUP-002** - Configure Development Tools
 
 ---
 
 ## Notes
 
-This template provides the structure for the Agentic Loop pattern. Customize
-it for your specific project by:
-
-1. Writing your technical spec in CLAUDE.md
-2. Defining your features in feature_list.json
-3. Updating test commands in checklists.md
-4. Adding lessons to lessons-learned.md as you work
+This is the first task when using this template. Customize the agentic loop files for your specific Bun + Hono project.

@@ -1,0 +1,60 @@
+{
+  "id": "SETUP-001",
+  "name": "Initialize Bun Project",
+  "description": "Set up the basic Bun + Hono project structure",
+  "session": 1,
+  "token_budget": 25000,
+  "dependencies": [],
+  "passes": false,
+  "acceptance_criteria": [
+    "package.json exists with bun as runtime",
+    "Hono installed and configured",
+    "Basic health check endpoint works",
+    "bun run dev starts the server",
+    "TypeScript configured with strict mode"
+  ],
+  "execution_phases": [
+    {
+      "phase": 1,
+      "name": "Schema & Types",
+      "tasks": [
+        "Create package.json with dependencies",
+        "Create tsconfig.json with strict mode",
+        "Define basic App type"
+      ]
+    },
+    {
+      "phase": 2,
+      "name": "Core Setup",
+      "tasks": [
+        "Create src/index.ts with Hono app",
+        "Add health check route",
+        "Configure dev script"
+      ]
+    },
+    {
+      "phase": 3,
+      "name": "Verification",
+      "tasks": [
+        "Verify server starts",
+        "Verify health check returns 200",
+        "Commit setup"
+      ]
+    }
+  ],
+  "quality_gates": [
+    "Server starts without errors",
+    "GET /health returns { status: 'ok' }",
+    "TypeScript compiles without errors"
+  ],
+  "implementation_hints": {
+    "files_to_create": [
+      "package.json",
+      "tsconfig.json",
+      "src/index.ts"
+    ],
+    "code_snippets": {
+      "basic_hono_app": "import { Hono } from 'hono'\n\nconst app = new Hono()\n\napp.get('/health', (c) => c.json({ status: 'ok' }))\n\nexport default app"
+    }
+  }
+}

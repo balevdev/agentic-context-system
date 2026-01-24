@@ -1,0 +1,36 @@
+{
+  "last_updated": "2024-01-15",
+  "note": "Full feature definitions in features/active/<FEATURE_ID>.json",
+  "features": [
+    {
+      "id": "SETUP-001",
+      "name": "Initialize Bun Project",
+      "session": 1,
+      "dependencies": []
+    },
+    {
+      "id": "SETUP-002",
+      "name": "Configure Development Tools",
+      "session": 1,
+      "dependencies": ["SETUP-001"]
+    },
+    {
+      "id": "CORE-001",
+      "name": "Database Layer",
+      "session": 2,
+      "dependencies": ["SETUP-002"]
+    },
+    {
+      "id": "CORE-002",
+      "name": "Todo CRUD Routes",
+      "session": 2,
+      "dependencies": ["CORE-001"]
+    },
+    {
+      "id": "CORE-003",
+      "name": "Error Handling & Validation",
+      "session": 3,
+      "dependencies": ["CORE-002"]
+    }
+  ]
+}

@@ -1,96 +1,208 @@
 # Lessons Learned
 
-> This file accumulates wisdom from previous sessions.
-> Add new lessons as they are discovered.
-> Reference this file at the start of each session.
+Accumulated wisdom from project sessions. Read this at session start to avoid repeating mistakes.
 
 ---
 
-## Git Workflow
+## Bun & Hono
 
-<!-- Add lessons about git workflow as you discover them -->
-<!-- Example:
-1. ALWAYS COMMIT BEFORE MARKING COMPLETE
-   - Code must be committed before setting passes: true
-   - Run: git status (must show clean)
--->
+### 1. USE `export default app` FOR BUN SERVE
 
----
+Bun's built-in server expects a default export:
 
-## Verification Sequence
+```typescript
+// Good - works with `bun run src/index.ts`
+export default app
 
-<!-- Add the exact verification sequence that works for your project -->
-<!-- Example:
-Run this exact sequence before marking complete:
-```bash
-npm test && npm run typecheck && npm run lint
-git add -A && git commit -m "type(scope): description"
-git status  # must show clean
+// Also good - explicit port
+export default {
+  port: 3000,
+  fetch: app.fetch,
+}
 ```
--->
+
+### 2. HONO CONTEXT TYPING
+
+Always type your Hono app for better inference:
+
+```typescript
+// Good - typed context
+const app = new Hono<{ Variables: { userId: string } }>()
+
+// Access typed variables
+app.use(async (c, next) => {
+  c.set('userId', '123')
+  await next()
+})
+
+app.get('/me', (c) => {
+  const userId = c.get('userId') // typed as string
+})
+```
+
+### 3. BUN SQLITE IS SYNCHRONOUS
+
+Bun's built-in SQLite is synchronous, not async:
+
+```typescript
+// Good - synchronous
+const db = new Database('todo.db')
+const todos = db.query('SELECT * FROM todos').all()
+
+// Bad - unnecessary async
+const todos = await db.query('SELECT * FROM todos').all() // won't work
+```
 
 ---
 
 ## Testing
 
-<!-- Add testing lessons specific to your project -->
-<!-- Example:
-1. Never delete tests to make them pass
-2. Mock external dependencies in unit tests
-3. Integration tests should use real database
--->
+### 1. USE `describe` AND `test` FROM BUN
+
+Bun has built-in test runner:
+
+```typescript
+import { describe, test, expect, beforeEach } from 'bun:test'
+
+describe('todos', () => {
+  beforeEach(() => {
+    // setup
+  })
+
+  test('should create todo', () => {
+    expect(result).toBeDefined()
+  })
+})
+```
+
+### 2. TEST DATABASE ISOLATION
+
+Use separate test database or reset between tests:
+
+```typescript
+import { Database } from 'bun:sqlite'
+
+let db: Database
+
+beforeEach(() => {
+  db = new Database(':memory:') // fresh in-memory DB each test
+  // run migrations
+})
+```
 
 ---
 
-## Architecture
+## API Design
 
-<!-- Add architecture patterns specific to your project -->
-<!-- Example:
-1. All domain types use Zod schemas
-2. Ports define interfaces, adapters implement them
-3. Use cases coordinate between ports
--->
+### 1. CONSISTENT ERROR RESPONSES
+
+Always return errors in the same format:
+
+```typescript
+// Good - consistent structure
+return c.json({
+  error: {
+    code: 'NOT_FOUND',
+    message: 'Todo with id 123 not found'
+  }
+}, 404)
+
+// Bad - inconsistent
+return c.json({ message: 'Not found' }, 404)
+return c.json({ error: 'Not found' }, 404)
+```
+
+### 2. VALIDATE EARLY, FAIL FAST
+
+Check input at route entry, not in business logic:
+
+```typescript
+app.post('/todos', async (c) => {
+  const body = await c.req.json()
+
+  // Validate immediately
+  const validation = validateCreateTodo(body)
+  if (!validation.success) {
+    return c.json({ error: { code: 'VALIDATION_ERROR', message: validation.error } }, 400)
+  }
+
+  // Now safe to use
+  const todo = createTodo(validation.data)
+  return c.json({ data: todo }, 201)
+})
+```
+
+---
+
+## TypeScript
+
+### 1. STRICT MODE CATCHES BUGS
+
+Always use strict mode in tsconfig.json:
+
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true
+  }
+}
+```
+
+### 2. INFER RETURN TYPES
+
+Let TypeScript infer return types for simple functions:
+
+```typescript
+// Good - inferred
+function getTodo(id: number) {
+  return db.query('SELECT * FROM todos WHERE id = ?').get(id) as Todo | null
+}
+
+// Only annotate when complex or for documentation
+function processTodos(todos: Todo[]): ProcessedTodo[] {
+  // complex logic
+}
+```
 
 ---
 
 ## Common Mistakes to Avoid
 
-<!-- Add mistakes that have been made and should be avoided -->
-<!-- Example:
-1. Not reading files before modifying them
-2. Changes affecting more than 5 files unexpectedly
-3. Uncommitted changes at session end
-4. Marking complete without verification
--->
+1. **Forgetting to export types** - Always `export interface` or `export type`
+2. **Not handling null from DB** - `.get()` returns `undefined` if not found
+3. **Forgetting Content-Type** - Hono's `c.json()` handles this, but raw responses don't
+4. **Test pollution** - Always reset state between tests
+5. **Sync vs Async confusion** - Bun SQLite is sync, network calls are async
 
 ---
 
-## Project-Specific Patterns
-
-<!-- Add patterns unique to your project -->
-<!-- Example:
-1. Error types extend base AnakinError class
-2. All API responses use SuccessResponse<T> wrapper
-3. Components use specific naming convention
--->
-
----
-
-## How to Add Lessons
+## Add New Lessons
 
 When you discover something important:
 
-1. **Identify the category** - Git, Testing, Architecture, etc.
-2. **Write it clearly** - Future sessions should understand immediately
-3. **Include context** - Why is this important? What went wrong?
-4. **Keep it actionable** - What should be done differently?
+1. Add it here with a clear title
+2. Include code examples (good vs bad)
+3. Note when/where it was discovered
+4. Keep it concise but complete
 
 Format:
-```
-## Category
+```markdown
+### N. LESSON TITLE IN CAPS
 
-N. LESSON TITLE
-   - Explanation of the lesson
-   - Why it matters
-   - What to do instead
+Brief explanation of the issue.
+
+```typescript
+// Good - the right way
+code example
+
+// Bad - the wrong way
+code example
 ```
+
+Discovered in FEATURE-ID when [what happened].
+```
+
+---
+
+*This file grows with the project. Check it at session start. Add to it when you learn something.*
